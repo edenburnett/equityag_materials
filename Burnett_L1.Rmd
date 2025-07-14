@@ -3,27 +3,156 @@ title: "Burnett_L1"
 output: html_document
 date: "2025-07-14"
 ---
+# load packages
+library(arrow)
+library(dplyr)
+library(ggplot2)
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# merging/loading the data
+merged_data <- read_parquet(file = "merged_data.parquet",stringsAsFactors = TRUE)
 
-## R Markdown
+#show first 6 rows of codes
+head(merged_data[, 1:10], 6) 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+#show last 6 rows of code
+tail(merged_data[,1:10],6)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#show structure and variable types of first 10 columns
+str(merged_data[, 1:10])
 
-```{r cars}
-summary(cars)
-```
+#cleaning data: remove rows with missing values with na.omit() this dropped all the observations
+merged_data <- na.omit(merged_data)
 
-## Including Plots
+#this gets all the observations back
+merged_data <- read_parquet(file = "merged_data.parquet",stringsAsFactors = TRUE)
 
-You can also embed plots, for example:
+#create a new object of just AZ
+subset_data_az <- subset(merged_data, STATE_ABBR_2010SVI == "AZ")
+#This separated the 1526 AZ observations
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+#summarize data: basic statistics for each variable
+summary(subset_data_az[, 1:10],6)
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#calcuating mean and SD for upward mobility for AZ
+upward_mean_2010_az <- mean(subset_data_az$upward_mobility_rate_2010)
+upward_sd_2010_az <- sd(subset_data_az$upward_mobility_rate_2010)
+upward_mean_2020_az <- mean(subset_data_az$upward_mobility_rate_2020)
+upward_sd_2020_az <- sd(subset_data_az$upward_mobility_rate_2020)
+#this gives us the mean and SD for upward mobility for 2010 and 2020, now lets print them
+print(upward_mean_2010_az)
+# [1] 0.9555026
+
+#print the upward mean from 2010 again in a different way
+print(upward_mean_2010_az <- mean(subset_data_az$upward_mobility_rate_2010)) 
+
+#print the upward mean from 2020
+print(upward_sd_2010_az <- sd(subset_data_az$upward_mobility_rate_2010))
+#this prints 1.290988
+
+
+#now do the same thing for CA
+
+#create the subset
+subset_data_ca <- subset(merged_data, STATE_ABBR_2010SVI == "CA")
+# this is 8048 of the observations
+
+#now print the upward mean for 2010 for CA
+print(upward_mean_2010_ca <- mean(subset_data_ca$upward_mobility_rate_2010))
+#which prints 0.8980642
+print(upward_sd_2010_ca <- sd(subset_data_ca$upward_mobility_rate_2010))
+#1.068233
+print(upward_mean_2020_ca <- mean(subset_data_ca$upward_mobility_rate_2020))
+# 0.8979882
+print(upward_sd_2020_ca <- sd(subset_data_ca$upward_mobility_rate_2020))
+# 1.067493
+
+
+# calculate statistics for counties ex: pima in AZ
+print(pima_upward_mean_2010_az <- mean(subset_data_az$upward_mobility_rate_2010[subset_data_az$COUNTY_2010SVI == "Pima County"]))
+#returns: 0.7199832
+
+#now SD
+print(pima_upward_sd_2010_az <- sd(subset_data_az$upward_mobility_rate_2010[subset_data_az$COUNTY_2010SVI == "Pima County"]))
+#returns: 0.7447619
+
+# now del norte in CA
+print(delnorte_upward_mean_2010_ca <- mean(subset_data_ca$upward_mobility_rate_2010[subset_data_ca$COUNTY_2010SVI == "Del Norte County"]))
+#returns: 1.088862
+
+print(delnorte_upward_sd_2010_ca <- sd(subset_data_ca$upward_mobility_rate_2010[subset_data_ca$COUNTY_2010SVI == "Del Norte County"]))
+#returns: 0.7692906
+
+#summary stats using dplyr and ggplot
+#making a new varible for summary stats 2010 using data for AZ and group data by county then calculate mean and SD for each county
+
+#AZ 
+summary_stats_upward_2010 <- subset_data_az %>%
+  group_by(COUNTY_2010SVI) %>%
+  summarize(mean_mobility_2010_az = mean(upward_mobility_rate_2010),
+            sd_mobility_2010_az = sd(upward_mobility_rate_2010))
+    
+    
+#view results with:
+(head(summary_stats_upward_2010))
+
+#visualize data with ggplot
+mobility_plot <- ggplot(data = summary_stats_upward_2010,
+                        mapping = aes(x= COUNTY_2010SVI, y=mean_mobility_2010_az)) +
+  geom_boxplot()
+print(mobility_plot)
+
+
+#summarize every county in every state?
+summary_stats_upward_2010_all <- merged_data %>%
+  group_by(STATE_ABBR_2010SVI, COUNTY_2010SVI) %>%
+  summarize(mean_mobility_2010 = mean(upward_mobility_rate_2010),
+            sd_mobility_2010 = sd(upward_mobility_rate_2010))
+# `summarise()` has grouped output by 'STATE_ABBR_2010SVI'. You can override
+## using the `.groups` argument.
+
+#now use expanded dataset to create a boxplot grouped by state
+mobility_plot <- ggplot(data = summary_stats_upward_2010_all,
+                        mapping = aes(x = STATE_ABBR_2010SVI, y = mean_mobility_2010)) +
+  geom_boxplot()
+print(mobility_plot)
+            
+
+#remove missing states
+summary_stats_upward_2010_all <- summary_stats_upward_2010_all[!is.na(summary_stats_upward_2010_all$STATE_ABBR_2010SVI),]
+
+#use expanded dataset to create a boxplot grouped by state
+mobility_plot <- ggplot(data = summary_stats_upward_2010_all,
+                        mapping = aes(x= STATE_ABBR_2010SVI, y=mean_mobility_2010,
+                                      fill = STATE_ABBR_2010SVI)) +
+  geom_boxplot()
+print(mobility_plot)
+
+#save the plot
+ggsave(plot = mobility_plot, filename = "output/mobility-plot-2010.pdf")
+
+
+
+#STUDENT ACTIVITIES
+
+
+#list counties in California
+table(subset_data_ca$COUNTY_2010SVI)
+
+#choose Monterey County
+
+#print upward mean for 2010
+print(monterey_upward_mean_2010_ca <- mean(subset_data_ca$upward_mobility_rate_2010[subset_data_ca$COUNTY_2010SVI == "Monterey County"]))
+#returns 0.8641515
+
+#print upward sd for 2010
+print(monterey_upward_sd_2010_ca <- sd(subset_data_ca$upward_mobility_rate_2010[subset_data_ca$COUNTY_2010SVI == "Monterey County"]))
+#returns 0.9171235
+
+#print upward mean for 2020
+print(monterey_upward_mean_2020_ca <- mean(subset_data_ca$upward_mobility_rate_2020[subset_data_ca$COUNTY_2010SVI == "Monterey County"]))
+#returns 0.8657966
+
+
+
+
+
