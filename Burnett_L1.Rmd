@@ -213,7 +213,7 @@ ggsave(plot = monterey_plot_2020, filename = "Monterey_County_Upward_Mobility_20
 
 over_one <- subset_data_ca %>%
   filter(upward_mobility_rate_2010 > 1)
-  
+   
 
 #PART 4
 #part 2 was the most confusing becasue there didn't seem to be a simple way to filter to the county I had chosen and it wasn't clear what the data was that we were dealing with... what each row a separate survey take at a time throughout the year??
