@@ -173,74 +173,40 @@ print(monterey_upward_sd_2020_ca <- sd(subset_data_ca$upward_mobility_rate_2020[
 
 #PART TWO
 
-summary_stats_upward_2010_monterey <- merged_data %>%
-  group_by(COUNTY_2010SVI== "Monterey") %>%
-  summarize(mean_mobility_2010 = mean(upward_mobility_rate_2010),
-            sd_mobility_2010 = sd(upward_mobility_rate_2010))
-            
-# I don't understand how to separate the data by county and then plot that??? help im confused what we are plotting in the graph is it the whole spread of data for that county for that year or just the means? bc I dont know how to separate the spread of data by county from the larger set. I tried to filter the CA subset by county == Monterey and it returns zero obs. 
+
+#subset the monterey data -YAY actually works
 
 
-mobility_plot <- ggplot(data = summary_stats_upward_2010_all,
-                        mapping = aes(x = STATE_ABBR_2010SVI, y = mean_mobility_2010)) +
-  geom_boxplot()
-print(mobility_plot)
+subset_data_monterey <- subset(merged_data, COUNTY_2010SVI == "Monterey County")
+
+#make the boxplot
+
+monterey_plot <- ggplot(data = subset_data_monterey,
+                            mapping = aes (y = upward_mobility_rate_2010)) + 
+                            geom_boxplot(fill= "lightblue") + 
+                            labs(title = "Upward Mobility Rate in Monterey County 2010")
+                            y = ("Upward Mobility Rate") +
+                            theme_minimal()
+                            
+print(monterey_plot)
+
+ggsave(plot = monterey_plot, filename = "Monterey_County_Upward_Mobility_2010.pdf)
 
 
+#now for 2020
+monterey_plot_2020 <- ggplot(data = subset_data_monterey,
+                            mapping = aes (y = upward_mobility_rate_2020)) + 
+                            geom_boxplot(fill= "lightgreen") + 
+                            labs(title = "Upward Mobility Rate in Monterey County 2020")
+                            y = ("Upward Mobility Rate") +
+                            theme_minimal()
+                            
+print(monterey_plot_2020)
+
+ggsave(plot = monterey_plot_2020, filename = "Monterey_County_Upward_Mobility_2020.pdf)
 
 
-
-monterey_2010_plot <- ggplot(data = subset_data_ca,
-                        mapping = aes(x= COUNTY_2010SVI== "Monterey", y=upward_mobility_rate_2010)) +
-  geom_boxplot()
-print(monterey_2010_plot)
-
-#group data by counties 
-county_data <- subset_data_ca %>%
-  group_by(COUNTY_2010SVI)
-#this doesnt really do anything
-#filter monterey
-monterey_data <- subset_data_ca %>%
-  filter(COUNTY_2010SVI == "Monterey")
-#returns 0 obs bruh help
-
-
-#plot data by years? 
-ggplot(monterey_data, aes(x = factor(upward_mobility_rate_2010), y = mobility_rate)) +
-  geom_boxplot(fill = "lightblue") +
-  labs(title = "Upward Mobility Rates for Monterey County",
-       x = "2010",
-       y = "Mobility Rate") 
-  
-mobility_plot <- ggplot(data = summary_stats_upward_2010_all,
-                        mapping = aes(x= COUNTY_2010SVI, y=mean_mobility_2010,
-                                      fill = STATE_ABBR_2010SVI)) +
-  geom_boxplot()
-print(mobility_plot)
-  
-  
-#chat help hopefully works
-monterey_data <- summary_stats_upward_2010_all %>%
-  filter(COUNTY_2010SVI == "Monterey")
-  
-obility_plot <- ggplot(data = monterey_data,
-                        mapping = aes(x = COUNTY_2010SVI,
-                                      y = mean_mobility_2010,
-                                      fill = STATE_ABBR_2010SVI)) +
-  geom_boxplot() +
-  labs(title = "Upward Mobility in Monterey County (2010)",
-       x = "County",
-       y = "Mean Upward Mobility") +
-  theme_minimal()
-
-print(mobility_plot)
-
-#doesnt work cant sort it by county???
-
-ggsave(plot = mobility_plot, filename = "output/mobility-plot-2010.pdf")
-
-  
-  
+                                           
 #PART THREE 
 
 #filter CA subset to lines where upward mobility is > 1. 
